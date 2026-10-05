@@ -21,7 +21,7 @@ cd krt-terminal
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python scripts/make_sample_data.py                  # demo data (random, real இல்லை)
-python main.py --at "2026-10-01 12:15"
+python main.py --source csv --at "2026-10-01 12:15"
 pytest -q
 ```
 
@@ -50,3 +50,10 @@ main.py                   CLI terminal
 - Failed CE ≠ auto PE
 
 Full spec: [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)
+
+## 🌐 Website mode
+- **PC-ல்:** `KRT.bat` double-click → browser-ல் dashboard திறக்கும் (http://127.0.0.1:8765)
+- **Render-ல்:** Build `pip install -r requirements.txt`, Start `python server.py`,
+  Environment: `ANGEL_API_KEY, ANGEL_CLIENT_ID, ANGEL_MPIN, ANGEL_TOTP_SECRET, BROKER=angel, APP_PASSWORD, PYTHON_VERSION=3.12.7`
+  (optional `CHARTINK_CE_CLAUSE`, `CHARTINK_PE_CLAUSE`)
+- `.env` file-ஐ GitHub-ல் ஒருபோதும் upload செய்ய வேண்டாம்.

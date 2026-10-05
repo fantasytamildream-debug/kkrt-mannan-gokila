@@ -1,38 +1,34 @@
-"""KRT Terminal — Phase 1 CLI scanner.
-Usage: python main.py --at "2026-10-01 11:15"
-"""
+"""KRT Terminal — command line.
+  python main.py                                      (live, Angel One)
+  python main.py --source csv --at "2026-10-01 12:15" (demo)
+Website-க்கு: KRT.bat double-click."""
 import argparse
-import pandas as pd
-from krt.config import load_settings, ROOT
-from krt.data.csv_provider import CSVProvider
-from krt.scanner import scan
-from krt.signals import SignalLog
+from krt.runner import run_scan
 
 
 def fmt(r):
     t = "/".join(str(x) for x in r["targets"]) or "-"
-    return (f"  {r['symbol']:<11}{r['level_name']:<5}{r['level']:>10}  px {r['price']:>9}  "
+    return (f"  {r['symbol']:<11}{r['level_name']:<12}{r['level']:>10}  px {r['price']:>9}  "
             f"RVOL {r['rvol'] or '-':>5}  score {r['score']:>3}  SL {r['sl']:>9}  T {t:<26} {r['status']}")
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--at", required=True, help="scan time, e.g. '2026-10-01 11:15'")
+    ap.add_argument("--at", default=None)
+    ap.add_argument("--source", choices=["csv", "angel"], default=None)
+    ap.add_argument("--no-chartink", action="store_true")
     a = ap.parse_args()
-    cfg = load_settings()
-    now = pd.Timestamp(a.at)
-    res = scan(CSVProvider(ROOT / "data" / "sample"), cfg, now)
-    log = SignalLog(ROOT / "logs" / "signals.jsonl")
-
-    print(f"\n KRT TERMINAL  |  {now}  |  MARKET: {res['market']}")
+    res = run_scan(a.source, a.at, not a.no_chartink)
+    print(f"\n KRT TERMINAL  |  {res['time']}  |  MARKET: {res['market']}  |  {res['source'].upper()}")
+    for m in res["msgs"]:
+        print(" " + m)
     print(" " + "━" * 100)
     for side, label in (("ce", "🟢 TOP CE CANDIDATES"), ("pe", "🔴 TOP PE CANDIDATES")):
         print(f"\n {label}")
         print("\n".join(fmt(r) for r in res[side]) or "  NO CONFIRMED SETUP")
     for b in res["blocked"]:
         print(f"  ⚠ {b['symbol']}: {b['status']}")
-    new = [s for s in res["signals"] if log.add(s)]
-    print(f"\n New signals logged: {len(new)}  →  logs/signals.jsonl")
+    print(f"\n New signals logged: {res['new_signals']}")
     if not res["signals"]:
         print(" WAIT — நல்ல setup இல்லை.")
     print("\n ⚠ Rule-based scanner. Profit / accuracy guarantee இல்லை. Not investment advice.\n")
